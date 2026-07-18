@@ -313,10 +313,10 @@
           <p class="form-status" id="qfStatus" role="status" aria-live="polite"></p>
         </form>
 
-        <div class="form-success" id="qfSuccess" hidden>
+        <div class="form-success form-flash" id="qfSuccess" role="status" aria-live="polite" hidden>
           <div class="form-success-icon">✅</div>
           <h3>Thanks, your request is in!</h3>
-          <p>We've received your info and photos. You'll receive an estimated quote shortly. (A tab may briefly flash open in the background — it closes itself automatically.)</p>
+          <p>We've received your info and photos. You'll receive an estimated quote shortly.</p>
         </div>
       </div>
     </div>
@@ -530,6 +530,34 @@
         status.className = 'form-status' + (isError ? ' form-status-error' : '');
       }
 
+      var flashTimer;
+
+      function showFlash() {
+        success.hidden = false;
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            success.classList.add('is-visible');
+          });
+        });
+        clearTimeout(flashTimer);
+        flashTimer = setTimeout(function () {
+          success.classList.remove('is-visible');
+          setTimeout(function () { success.hidden = true; }, 300);
+        }, 6000);
+      }
+
+      function resetQuoteForm() {
+        form.reset();
+        if (photoPreviews) photoPreviews.innerHTML = '';
+        requiredFields.forEach(function (field) {
+          field.input.classList.remove('invalid');
+          field.error.textContent = '';
+        });
+        if (replyToField) replyToField.value = '';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Request My Free Quote';
+      }
+
       function renderPhotoPreviews() {
         photoPreviews.innerHTML = '';
         var files = photosField.files ? Array.prototype.slice.call(photosField.files) : [];
@@ -672,13 +700,12 @@
             }, 4000);
           }
 
-          form.hidden = true;
-          success.hidden = false;
-          success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          resetQuoteForm();
+          showFlash();
         }).catch(function () {
           setStatus('Something went wrong sending your request. Please try again, or text us a photo directly instead.', true);
           submitBtn.disabled = false;
-          submitBtn.textContent = '📱 Request My Free Quote';
+          submitBtn.textContent = 'Request My Free Quote';
           if (popup && !popup.closed) popup.close();
         });
       });

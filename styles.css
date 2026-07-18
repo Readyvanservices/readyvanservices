@@ -200,6 +200,11 @@ details p{color:var(--slate);margin-top:.6rem}
 .form-success-icon{font-size:2.4rem;margin-bottom:.6rem}
 .form-success h3{color:var(--navy);margin-bottom:.5rem}
 .form-success p{color:var(--slate)}
+.form-flash{position:fixed;top:16px;left:50%;z-index:200;width:min(92vw,420px);padding:1.4rem 1.6rem;opacity:0;pointer-events:none;transform:translate(-50%,-16px);transition:opacity .3s ease,transform .3s ease}
+.form-flash.is-visible{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.form-flash .form-success-icon{font-size:1.8rem;margin-bottom:.3rem}
+.form-flash h3{font-size:1.05rem}
+.form-flash p{font-size:.92rem}
 
 /* Contact cards */
 .contact-cards{display:flex;justify-content:center;align-items:flex-start;flex-wrap:wrap;gap:1.5rem;max-width:900px;margin:0 auto}

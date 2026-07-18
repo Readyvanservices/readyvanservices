@@ -316,7 +316,7 @@
         <div class="form-success" id="qfSuccess" hidden>
           <div class="form-success-icon">✅</div>
           <h3>Thanks, your request is in!</h3>
-          <p>We've received your info and photos. You'll receive an estimated quote shortly. (A confirmation tab may open in the background — feel free to close it.)</p>
+          <p>We've received your info and photos. You'll receive an estimated quote shortly. (A tab may briefly flash open in the background — it closes itself automatically.)</p>
         </div>
       </div>
     </div>
@@ -636,16 +636,41 @@
         Promise.all(files.map(function (file) {
           return compressImage(file, 1600, 0.72);
         })).then(function (compressedFiles) {
-          if (photosField && typeof DataTransfer !== 'undefined') {
-            var dataTransfer = new DataTransfer();
-            compressedFiles.forEach(function (file) {
+          // FormSubmit's own docs demonstrate attachments as a field named "attachment"
+          // rather than our UI's "photos" field, and describe multiple files as multiple
+          // separate file input fields rather than one multi-file input — so build the
+          // fields it actually expects fresh, right before submitting, instead of reusing
+          // the picker input directly.
+          var dynamicAttachmentInputs = [];
+          if (typeof DataTransfer !== 'undefined') {
+            compressedFiles.forEach(function (file, index) {
+              var dataTransfer = new DataTransfer();
               dataTransfer.items.add(file);
+              var attachmentInput = document.createElement('input');
+              attachmentInput.type = 'file';
+              attachmentInput.hidden = true;
+              attachmentInput.name = compressedFiles.length > 1 ? 'attachment' + (index + 1) : 'attachment';
+              attachmentInput.files = dataTransfer.files;
+              form.appendChild(attachmentInput);
+              dynamicAttachmentInputs.push(attachmentInput);
             });
-            photosField.files = dataTransfer.files;
           }
+          if (photosField) photosField.disabled = true;
 
           form.target = QF_POPUP_NAME;
           HTMLFormElement.prototype.submit.call(form);
+
+          dynamicAttachmentInputs.forEach(function (input) { form.removeChild(input); });
+          if (photosField) photosField.disabled = false;
+
+          // A hidden iframe gets the submission silently dropped by FormSubmit, so this
+          // window has to be real/visible for delivery to work — auto-close it shortly
+          // after so it isn't left sitting there once the upload has had time to finish.
+          if (popup) {
+            setTimeout(function () {
+              if (!popup.closed) popup.close();
+            }, 4000);
+          }
 
           form.hidden = true;
           success.hidden = false;
